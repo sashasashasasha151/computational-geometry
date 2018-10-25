@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/sasha/Code/ComputationalGeometry/convex_hull/main.cpp
+iostream
+-
+vector
+-
+cmath
+-
+climits
+-
+algorithm
+-
+
