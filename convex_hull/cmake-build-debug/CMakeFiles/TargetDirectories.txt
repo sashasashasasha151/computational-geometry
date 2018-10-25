@@ -1,3 +1,0 @@
-/home/sasha/Code/ComputationalGeometry/convex_hull/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/sasha/Code/ComputationalGeometry/convex_hull/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/sasha/Code/ComputationalGeometry/convex_hull/cmake-build-debug/CMakeFiles/convex_hull.dir
