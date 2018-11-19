@@ -5,35 +5,26 @@
 
 using namespace std;
 
-struct Pryanik {
-    short x = 0;
-    short y = 0;
-    short width = -1;
-
-    Pryanik(short xx, short yy, short ww) {
-        x = xx;
-        y = yy;
-        width = ww;
-    }
-
-    Pryanik() {
-        x = 0;
-        y = 0;
-        width = -1;
-    }
-
+struct Rect {
+    short x{};
+    short y{};
+    short width{};
     bool have_point = false;
     bool have_one_point = false;
 
     pair<short, short> point;
+
+    Rect() = default;
+
+    Rect(short xx, short yy, short ww) : x(xx), y(yy), width(ww) {}
 };
 
-vector<Pryanik> vertexes;
+vector<Rect> vertexes;
 map<pair<short, short>, int> id;
 
 
 void build(short x, short y, short width, int index) {
-    vertexes[index] = Pryanik(x, y, width);
+    vertexes[index] = Rect(x, y, width);
 
     if (width == 2) {
         return;
@@ -68,40 +59,40 @@ bool set_point(short x, short y, int index) {
 }
 
 void add(short x, short y, int index) {
-    if (set_point(x, y, index)) {
-        return;
-    }
-
-    if (x > vertexes[index].x) {
-        if (y > vertexes[index].y) {
-            add(x, y, index * 4 + 3);
+    if (!set_point(x, y, index)) {
+        if (x > vertexes[index].x) {
+            if (y > vertexes[index].y) {
+                add(x, y, index * 4 + 3);
+            } else {
+                add(x, y, index * 4 + 4);
+            }
         } else {
-            add(x, y, index * 4 + 4);
-        }
-    } else {
-        if (y > vertexes[index].y) {
-            add(x, y, index * 4 + 1);
-        } else {
-            add(x, y, index * 4 + 2);
+            if (y > vertexes[index].y) {
+                add(x, y, index * 4 + 1);
+            } else {
+                add(x, y, index * 4 + 2);
+            }
         }
     }
 }
 
 double distance(pair<short, short> *pair, short x, short y) {
-    int xx = pair->first;
-    int yy = pair->second;
-    return sqrt((x - xx) * (x - xx) + (y - yy) * (y - yy));
+    int xx = x - pair->first;
+    int yy = y - pair->second;
+    return sqrt(xx * xx + yy * yy);
 }
 
-double to_pryanik(int index, pair<short, short> *pair) {
+double dist_to_rect(int index, pair<short, short> *pair) {
     if (pair->first < vertexes[index].x + vertexes[index].width / 2 &&
         pair->first > vertexes[index].x - vertexes[index].width / 2) {
-        return min(abs(pair->second - (vertexes[index].y + vertexes[index].width / 2)), abs(pair->second - (vertexes[index].y - vertexes[index].width / 2)));
+        return min(abs(pair->second - (vertexes[index].y + vertexes[index].width / 2)),
+                   abs(pair->second - (vertexes[index].y - vertexes[index].width / 2)));
     }
 
     if (pair->second < vertexes[index].y + vertexes[index].width / 2 &&
         pair->second > vertexes[index].y - vertexes[index].width / 2) {
-        return min(abs(pair->first - (vertexes[index].x + vertexes[index].width / 2)), abs(pair->first - (vertexes[index].x - vertexes[index].width / 2)));
+        return min(abs(pair->first - (vertexes[index].x + vertexes[index].width / 2)),
+                   abs(pair->first - (vertexes[index].x - vertexes[index].width / 2)));
     }
 
     double d5 = distance(pair, vertexes[index].x + vertexes[index].width / 2,
@@ -116,11 +107,6 @@ double to_pryanik(int index, pair<short, short> *pair) {
 }
 
 void update(int index, pair<short, short> *pair, short x, short y) {
-//    cout << index << "\n";
-//    if(p == nullptr) {
-//        return;
-//    }
-//    cout << "up: " << p->x << " " << p->y << "\n";
     if (!vertexes[index].have_point) {
         return;
     }
@@ -133,23 +119,16 @@ void update(int index, pair<short, short> *pair, short x, short y) {
         return;
     }
 
-    std::pair<short, short> nw = {x, y};
+    std::pair<short, short> cur_point = {x, y};
 
-    if (distance(pair, x, y) <= to_pryanik(index, &nw)) {
-        return;
-    } else {
-//        cout << "from up" << endl;
-//        cout << vertexes[index].have_point << " " << vertexes[index].have_one_point << " " << vertexes[index].width
-//             << endl;
-        update(index * 4 + 1, pair, x, y);
-        update(index * 4 + 2, pair, x, y);
-        update(index * 4 + 3, pair, x, y);
-        update(index * 4 + 4, pair, x, y);
+    if (distance(pair, x, y) > dist_to_rect(index, &cur_point)) {
+        for (int i = 1; i <= 4; ++i) {
+            update(index * 4 + i, pair, x, y);
+        }
     }
 }
 
 pair<short, short> closest_point(short x, short y, int index) {
-//    cout << "c_p: " << p->x << " " << p->y << "\n";
     if (vertexes[index].have_one_point) {
         return vertexes[index].point;
     }
@@ -159,7 +138,6 @@ pair<short, short> closest_point(short x, short y, int index) {
     }
 
     pair<short, short> pt;
-
     int num;
 
     if (x > vertexes[index].x) {
@@ -181,10 +159,9 @@ pair<short, short> closest_point(short x, short y, int index) {
     }
 
     for (int j = 0; j < 4; ++j) {
-        if (j == num) {
-            continue;
+        if (j != num) {
+            update(index * 4 + j + 1, &pt, x, y);
         }
-        update(index * 4 + j + 1, &pt, x, y);
     }
 
     return pt;
@@ -195,52 +172,24 @@ int main() {
     build(0, 0, 4096, 0);
 
     int n, m;
-
     cin >> n >> m;
 
+    short x, y;
     for (int i = 0; i < n; ++i) {
-        short x, y;
         cin >> x >> y;
         id[{x, y}] = i + 1;
         add(x * 2 + 1, y * 2 + 1, 0);
     }
 
     for (int i = 0; i < m; ++i) {
-        short x, y;
         cin >> x >> y;
         x = x * 2 + 1;
         y = y * 2 + 1;
 
         pair<short, short> ans = closest_point(x, y, 0);
 
-//        cout << ans.first << " " << ans.second << "\n";
-
         cout << id[{(ans.first - 1) / 2, (ans.second - 1) / 2}] << "\n";
     }
 
     return 0;
 }
-
-/*
-6 1
-0 3
-3 3
--3 2
--4 -1
--2 -2
--2 -4
-0 0
-
-4 1
-1001 1001
-1001 -1000
--1001 1000
--1001 -1000
-0 0
-
-2 2
-10 2
-3 3
--4 -9
--6 -1
-*/
